@@ -104,6 +104,7 @@ ignore = [
     "S311",   # random OK for simulations (not crypto)
     "B008",   # function call in default arg (pydantic)
     "SIM108", # ternary operators reduce readability in ML pipelines
+    "C408",   # dict() calls are idiomatic in Plotly/library APIs
 ]
 
 [tool.ruff.lint.per-file-ignores]
