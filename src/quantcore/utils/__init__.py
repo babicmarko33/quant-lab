@@ -1,0 +1,1 @@
+"""QuantCore utilities — shared helpers."""
