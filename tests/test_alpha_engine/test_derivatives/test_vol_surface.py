@@ -1,0 +1,69 @@
+import pandas as pd
+import pytest
+
+from alpha_engine.derivatives.volatility.surface import VolatilitySurface
+
+
+@pytest.fixture
+def sample_surface_data():
+    """3 expiries x 5 strikes = 15 data points."""
+    expiries = [0.25, 0.5, 1.0]
+    strikes = [80, 90, 100, 110, 120]
+    rows = []
+    for T in expiries:
+        for K in strikes:
+            moneyness = abs(K - 100) / 100
+            iv = 0.20 + 0.05 * moneyness + 0.01 * T
+            rows.append({"expiry": T, "strike": K, "iv": iv})
+    return pd.DataFrame(rows)
+
+
+class TestVolatilitySurface:
+    def test_fit_and_interpolate_known_point(self, sample_surface_data):
+        """Interpolation at a grid node recovers the original IV."""
+        surf = VolatilitySurface()
+        surf.fit(sample_surface_data)
+        iv = surf.interpolate(strike=100, expiry=0.5)
+        expected = sample_surface_data.query("strike==100 and expiry==0.5")["iv"].iloc[0]
+        assert abs(iv - expected) < 1e-4
+
+    def test_interpolate_between_strikes(self, sample_surface_data):
+        """In a smile, ATM vol is lower than OTM vols at same expiry."""
+        surf = VolatilitySurface()
+        surf.fit(sample_surface_data)
+        iv_90 = surf.interpolate(strike=90, expiry=0.5)
+        iv_110 = surf.interpolate(strike=110, expiry=0.5)
+        iv_100 = surf.interpolate(strike=100, expiry=0.5)
+        # ATM is at the minimum of the smile
+        assert iv_100 <= iv_90 + 0.01
+        assert iv_100 <= iv_110 + 0.01
+
+    def test_interpolate_returns_positive_iv(self, sample_surface_data):
+        surf = VolatilitySurface()
+        surf.fit(sample_surface_data)
+        iv = surf.interpolate(strike=95, expiry=0.75)
+        assert iv > 0
+
+    def test_surface_grid_shape(self, sample_surface_data):
+        """surface_grid() returns DataFrame with correct shape."""
+        surf = VolatilitySurface()
+        surf.fit(sample_surface_data)
+        grid = surf.surface_grid(strikes=[90, 100, 110], expiries=[0.25, 0.5, 1.0])
+        assert grid.shape == (3, 3)
+
+    def test_raises_before_fit(self):
+        surf = VolatilitySurface()
+        with pytest.raises(RuntimeError, match="not fitted"):
+            surf.interpolate(100, 0.5)
+
+    def test_fit_requires_columns(self):
+        bad_df = pd.DataFrame({"K": [100], "T": [1.0], "vol": [0.20]})
+        surf = VolatilitySurface()
+        with pytest.raises(ValueError, match="columns"):
+            surf.fit(bad_df)
+
+    def test_surface_grid_values_positive(self, sample_surface_data):
+        surf = VolatilitySurface()
+        surf.fit(sample_surface_data)
+        grid = surf.surface_grid(strikes=[85, 95, 100, 105, 115], expiries=[0.25, 0.5, 1.0])
+        assert (grid.values > 0).all()

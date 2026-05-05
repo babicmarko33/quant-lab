@@ -5,7 +5,7 @@
 [![CI](https://github.com/babicmarko33/quant-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/babicmarko33/quant-lab/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![190 tests](https://img.shields.io/badge/tests-190%20passing-brightgreen)](https://github.com/babicmarko33/quant-lab/actions)
+[![241 tests](https://img.shields.io/badge/tests-241%20passing-brightgreen)](https://github.com/babicmarko33/quant-lab/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -170,7 +170,7 @@ pre-commit run --all-files
 - [x] **Phase 2** — AlphaML: XGBoost + purged k-fold CV + MLSignalPipeline (129 tests)
 - [x] **Phase 3** — Portfolio: MeanVariance, RiskParity, CVaR, multi-asset backtester (162 tests)
 - [x] **Phase 4** — Dashboard + Paper Trading: Streamlit app, AlpacaBroker, PaperTrader (190 tests)
-- [ ] **Phase 5** — Derivatives Lab: Black-Scholes, Greeks, implied volatility, vol surface
+- [x] **Phase 5** — Derivatives Lab: Black-Scholes, Greeks, implied volatility, vol surface (241 tests)
 - [ ] **Phase 6** — Production: live execution, monitoring, alerting
 
 ---
