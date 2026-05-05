@@ -20,6 +20,8 @@ import numpy as np
 import pandas as pd
 
 from alpha_engine.strategies import BollingerMeanReversionStrategy, MomentumStrategy
+from alpha_ml.models.xgboost_model import XGBoostPredictor
+from alpha_ml.pipeline import MLSignalPipeline
 from quantcore.data.fetcher import fetch_ohlcv
 
 
@@ -48,7 +50,7 @@ def main() -> None:
     end = pd.Timestamp.today()
     start = end - pd.DateOffset(years=args.years)
 
-    print(f"\nFetching {args.ticker} data: {start.date()} → {end.date()}")
+    print(f"\nFetching {args.ticker} data: {start.date()} to {end.date()}")
     df = fetch_ohlcv(
         ticker=args.ticker,
         start=start.strftime("%Y-%m-%d"),
@@ -68,7 +70,18 @@ def main() -> None:
     for strat in strategies:
         result = strat.run(df, commission_bps=10, slippage_bps=5)
         results.append((strat.name, result))
-        print(f"  ✓ {strat.name}")
+        print(f"  [ok] {strat.name}")
+
+    # ML pipeline (XGBoost)
+    print("  Training XGBoost ML pipeline (60% IS / 40% OOS)...")
+    ml_pipeline = MLSignalPipeline(
+        model=XGBoostPredictor(n_estimators=100, random_state=42),
+        train_ratio=0.6,
+        horizon=5,
+    )
+    ml_result = ml_pipeline.run(df, commission_bps=10, slippage_bps=5)
+    results.append(("XGBoost ML Signal (OOS 40%)", ml_result))
+    print("  [ok] XGBoost ML Signal")
 
     print(f"\nPerformance Summary — {args.ticker} ({args.years}y)\n")
     print_result_table(results)

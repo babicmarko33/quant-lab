@@ -103,10 +103,12 @@ ignore = [
     "S101",   # assert usage OK in tests
     "S311",   # random OK for simulations (not crypto)
     "B008",   # function call in default arg (pydantic)
+    "SIM108", # ternary operators reduce readability in ML pipelines
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S106"]
+"tests/**" = ["S101", "S106", "N802", "N803", "N806"]  # ML fixture names use X uppercase
+"src/alpha_ml/**" = ["N803", "N806"]  # ML convention: X uppercase for feature matrices
 
 [tool.ruff.lint.isort]
 known-first-party = ["quantcore", "alpha_engine", "alpha_ml", "quant_dashboard"]

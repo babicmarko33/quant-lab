@@ -32,7 +32,7 @@ class BollingerMeanReversionStrategy(Strategy):
 
     @property
     def name(self) -> str:
-        return f"BollingerMeanReversion({self.window}d, {self.num_std}σ)"
+        return f"BollingerMeanReversion({self.window}d, {self.num_std}std)"
 
     def generate_signals(self, df: pd.DataFrame) -> pd.Series:
         """Compute Bollinger Band mean-reversion signals.
