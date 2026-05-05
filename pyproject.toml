@@ -34,25 +34,33 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Core ML: gradient boosting + purged k-fold + portfolio optimisation
 ml = [
     "scikit-learn>=1.3",
+    "xgboost>=2.0",
+    "cvxpy>=1.4",
+]
+# Heavy deep-learning (optional, not required for CI)
+deep-learning = [
     "torch>=2.1",
     "numba>=0.58",
 ]
+# Historical backtesting ecosystem extras (optional)
 backtest = [
     "quantstats>=0.0.62",
     "PyPortfolioOpt>=1.5",
-    "backtrader>=1.9",
-    "vectorbt>=0.26",
 ]
+# Interactive analytics dashboard
 dashboard = [
     "plotly>=5.18",
     "streamlit>=1.28",
 ]
+# Alternative data providers
 providers = [
     "alpha-vantage>=2.3",
     "polygon-api-client>=1.12",
 ]
+# Development tooling
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
@@ -62,7 +70,13 @@ dev = [
     "pre-commit>=3.5",
     "ipykernel>=6.27",
     "pandas-stubs>=2.0",
+    "pip-audit>=2.6",
 ]
+# Minimal set required to run the full test suite in CI
+ci = [
+    "quant-lab[dev,ml,dashboard]",
+]
+# Everything (excludes heavy deep-learning and third-party providers)
 all = ["quant-lab[ml,backtest,dashboard,providers,dev]"]
 
 [project.urls]

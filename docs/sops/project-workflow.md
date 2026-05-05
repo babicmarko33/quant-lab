@@ -37,20 +37,29 @@ Idea → Hypothesis → Research → Implement → Test → Validate → PR → 
 ## Module Development Order
 
 ```
-Phase 1: QuantCore (shared infrastructure)
-  └── Data fetcher → Indicators → Features → Utils
+Phase 0: Infrastructure (COMPLETE)
+  └── pyproject.toml, CI/CD, configs, data fetcher, indicators, features, 5 SOPs, README
 
-Phase 2: AlphaEngine (strategies + backtesting)
-  └── Backtest engine → Strategies → Risk → Performance
+Phase 1: AlphaEngine (COMPLETE — 87 tests)
+  └── BacktestResult, performance analytics, vectorized engine,
+      Strategy ABC + Momentum + Bollinger, walk-forward, risk module, CLI
 
-Phase 3: AlphaML (machine learning)
-  └── Training pipeline → Models → Evaluation → Feature selection
+Phase 2: AlphaML (COMPLETE — 129 tests)
+  └── PurgedKFold, FeatureStore, ModelTrainer ABC + XGBoost, CVResult, MLSignalPipeline
 
-Phase 4: Dashboard (visualization)
-  └── Data views → Strategy monitor → Risk dashboard
+Phase 3: Portfolio Allocation (COMPLETE — 162 tests)
+  └── Allocator ABC, EqualWeight, MeanVariance, RiskParity, CVaR,
+      multi-asset backtester with rebalancing
 
-Phase 5: Integration
-  └── Paper trading → Live execution → Monitoring
+Phase 4: Dashboard + Paper Trading (COMPLETE — 190 tests)
+  └── Execution layer (Order, Broker, AlpacaBroker, PaperTrader),
+      Streamlit multi-page dashboard, paper trading CLI
+
+Phase 5: Derivatives Lab (IN PROGRESS)
+  └── Black-Scholes pricing, Greeks, implied volatility, volatility surface
+
+Phase 6: Production
+  └── Live execution, monitoring, alerting
 ```
 
 ---

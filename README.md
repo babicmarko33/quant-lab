@@ -1,10 +1,12 @@
-# 🧪 quant-lab
+# quant-lab
 
-**Institutional-grade quantitative finance monorepo** — systematic alpha research, ML-driven strategies, and real-time analytics.
+**Institutional-grade quantitative finance monorepo** — systematic alpha research, ML-driven strategies, portfolio optimisation, and real-time analytics.
 
 [![CI](https://github.com/babicmarko33/quant-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/babicmarko33/quant-lab/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![190 tests](https://img.shields.io/badge/tests-190%20passing-brightgreen)](https://github.com/babicmarko33/quant-lab/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
@@ -13,127 +15,167 @@
 ```
 quant-lab/
 ├── src/
-│   ├── quantcore/          # Shared data, indicators, feature engineering
-│   │   ├── data/           # Multi-source fetcher (yfinance → Alpaca → Polygon)
-│   │   ├── indicators/     # Vectorized technical analysis (SMA, EMA, RSI, MACD, BB, ATR)
-│   │   ├── features/       # Feature pipeline for strategies & ML
-│   │   └── utils/          # Shared utilities
-│   ├── alpha_engine/       # Strategy development & backtesting
-│   │   ├── strategies/     # Strategy implementations (momentum, mean-reversion, stat-arb)
-│   │   ├── backtest/       # Event-driven backtester with walk-forward validation
-│   │   ├── risk/           # Position sizing, drawdown control, VaR/CVaR
-│   │   └── execution/      # Paper trading & live execution adapters
-│   ├── alpha_ml/           # ML models for financial prediction
-│   │   ├── models/         # Gradient boosting, LSTM, Transformers
-│   │   ├── training/       # Walk-forward training with purged k-fold CV
-│   │   └── evaluation/     # PSR/DSR, calibration, feature importance
-│   └── quant_dashboard/    # Streamlit real-time analytics
-├── tests/                  # Comprehensive test suite
-├── notebooks/              # Research notebooks (Jupyter/Marimo)
-├── docs/sops/              # Standard operating procedures
-└── data/                   # Local cache (gitignored)
+│   ├── quantcore/              # Shared data, indicators, feature engineering
+│   │   ├── data/               # Multi-source fetcher (yfinance -> Alpaca -> Polygon)
+│   │   ├── indicators/         # Vectorized: SMA, EMA, RSI, MACD, BB, ATR
+│   │   └── features/           # Feature pipeline with look-ahead bias protection
+│   ├── alpha_engine/           # Strategy development & backtesting
+│   │   ├── strategies/         # Momentum (12-1), Bollinger mean-reversion; Strategy registry
+│   │   ├── backtest/           # Vectorized engine + walk-forward + multi-asset backtester
+│   │   ├── analytics/          # Sharpe, Sortino, PSR, IC, turnover
+│   │   ├── risk/               # Kelly criterion, fractional Kelly, volatility targeting
+│   │   ├── portfolio/          # EqualWeight, MeanVariance, RiskParity, CVaR allocators
+│   │   └── execution/          # Order, Broker ABC, AlpacaBroker, PaperTrader
+│   ├── alpha_ml/               # ML signal generation
+│   │   ├── features/           # FeatureStore: winsorize + z-score + target labels
+│   │   ├── models/             # ModelTrainer ABC + XGBoost binary classifier
+│   │   ├── validation/         # PurgedKFold (Lopez de Prado), cross_val_predict_purged
+│   │   └── pipeline.py         # End-to-end OHLCV -> signals -> BacktestResult
+│   └── quant_dashboard/        # Streamlit multi-page analytics dashboard
+│       ├── components/charts.py# Pure Plotly chart factories (testable without Streamlit)
+│       └── pages/              # 1_Equity_Curve, 2_Portfolio, 3_ML_Signal
+├── tests/                      # 190+ tests; strict TDD red-green-refactor
+├── scripts/                    # run_backtest.py, run_paper_trader.py
+├── notebooks/                  # Research notebooks
+├── docs/
+│   ├── sops/                   # 8 Standard Operating Procedures
+│   └── plans/                  # Phase implementation plans
+└── data/                       # Local parquet cache (gitignored)
 ```
 
-## Key Features
+---
 
-- **Multi-source data pipeline** — Automatic fallback chain with parquet caching
-- **Vectorized indicators** — NumPy-optimized technical analysis (zero Python loops)
-- **Feature engineering** — Configurable pipeline with look-ahead bias protection
-- **Event-driven backtester** — Walk-forward validation, transaction costs, slippage modeling
-- **ML integration** — Purged k-fold CV, Probabilistic/Deflated Sharpe Ratio
-- **Risk management** — Kelly criterion sizing, drawdown control, correlation-aware allocation
-- **Production execution** — Alpaca paper trading with live order management
+## Key Capabilities
+
+| Module | Highlights |
+|--------|-----------|
+| **Data** | Auto-fallback chain (yfinance -> Alpaca), local parquet caching, full OHLCV |
+| **Indicators** | NumPy-vectorized: SMA, EMA, RSI (Wilder), MACD, Bollinger Bands, ATR |
+| **Backtesting** | Signal T -> fill T+1 OPEN, slippage/commission modeled, zero look-ahead |
+| **Walk-Forward** | Anchored folds with embargo (Lopez de Prado ch7), mean OOS Sharpe |
+| **ML Pipeline** | XGBoost + purged k-fold CV + PSR / IC evaluation |
+| **Portfolio** | MV, Risk Parity (Spinu 2013), CVaR LP (Rockafellar-Uryasev 2000) |
+| **Execution** | Alpaca paper trading; signal dedup; mock-testable broker interface |
+| **Dashboard** | 3-page Streamlit app: equity curve, portfolio weights, ML feature importance |
+
+---
 
 ## Quick Start
 
 ```bash
-# Clone
 git clone https://github.com/babicmarko33/quant-lab.git
 cd quant-lab
 
-# Install (editable mode with dev dependencies)
-pip install -e ".[dev]"
+# Full install (all test dependencies)
+pip install -e ".[ci]"
 
-# Copy environment variables
+# Copy and populate environment variables
 cp .env.example .env
-# Edit .env with your API keys
 
-# Run tests
-pytest -x --tb=short
+# Run all tests (190 passing)
+pytest -m "not integration" -q
 
-# Run with coverage
-pytest --cov=src --cov-report=term-missing
+# Launch the dashboard
+streamlit run src/quant_dashboard/app.py
 ```
 
-## Usage
+---
 
-### Fetch Market Data
+## Usage Examples
+
+### Run a Backtest
 
 ```python
 from quantcore.data.fetcher import fetch_ohlcv
+from alpha_engine.strategies.momentum import MomentumStrategy
 
-# Automatic provider fallback + local parquet caching
 spy = fetch_ohlcv("SPY", start="2020-01-01")
-print(spy.tail())
+result = MomentumStrategy().run(spy)
+print(f"Sharpe: {result.sharpe:.2f}  MaxDD: {result.max_drawdown:.1%}  Total: {result.total_return:.1%}")
 ```
 
-### Compute Indicators
+### Portfolio Allocation
 
 ```python
-from quantcore.indicators.technical import rsi, macd, bollinger_bands
+import pandas as pd
+from alpha_engine.portfolio import RiskParityAllocator
 
-rsi_14 = rsi(spy["close"], window=14)
-macd_df = macd(spy["close"])
-bb = bollinger_bands(spy["close"], window=20, num_std=2.0)
+returns = pd.DataFrame({t: fetch_ohlcv(t, start="2021-01-01")["close"].pct_change()
+                        for t in ["SPY", "TLT", "GLD"]}).dropna()
+weights = RiskParityAllocator().fit(returns)
+print(weights)
 ```
 
-### Build Feature Matrix
+### XGBoost ML Signal
 
 ```python
-from quantcore.features.pipeline import build_features, add_target
+from alpha_ml.pipeline import MLSignalPipeline
+from alpha_ml.models.xgboost_model import XGBoostModel
 
-features = build_features(spy, sma_windows=[10, 20, 50], rsi_window=14)
-dataset = add_target(features, spy["close"], horizon=5, target_type="direction")
-# Drop NaN rows (lookback warmup) before training
-dataset_clean = dataset.dropna()
+pipeline = MLSignalPipeline(model=XGBoostModel(), train_ratio=0.6, horizon=5)
+result = pipeline.run(fetch_ohlcv("SPY", start="2019-01-01"))
+print(f"OOS Sharpe: {result.sharpe:.2f}")
 ```
+
+### Paper Trading CLI
+
+```bash
+# Signal-only (no Alpaca keys needed)
+python scripts/run_paper_trader.py --ticker SPY --strategy momentum
+
+# Live paper submission (requires ALPACA_API_KEY + ALPACA_SECRET_KEY in .env)
+python scripts/run_paper_trader.py --ticker SPY --strategy bollinger_mr --qty 10
+```
+
+---
 
 ## Development
 
 ```bash
-# Lint
-ruff check src/ tests/
+# Lint + format check
+ruff check src/ tests/ scripts/
+ruff format --check src/ tests/ scripts/
 
-# Format
-ruff format src/ tests/
+# Full test suite
+pytest -m "not integration" -q
 
-# Type check
-mypy src/
+# Coverage report
+pytest --cov=src --cov-report=term-missing -m "not integration" -q
 
-# Run pre-commit hooks
+# Pre-commit hooks
 pre-commit run --all-files
 ```
 
-## Research Methodology
+---
 
-This project follows a rigorous quantitative research workflow:
+## Documentation
 
-1. **Hypothesis formation** — State testable prediction with clear null hypothesis
-2. **Data validation** — Check for survivorship bias, look-ahead bias, data snooping
-3. **Walk-forward testing** — Purged k-fold CV to prevent information leakage
-4. **Statistical validation** — Probabilistic Sharpe Ratio (PSR) and Deflated Sharpe Ratio (DSR)
-5. **Out-of-sample verification** — Hold-out period that was never touched during development
+| Document | Location |
+|----------|----------|
+| Project workflow (TDD, phases) | [docs/sops/project-workflow.md](docs/sops/project-workflow.md) |
+| Backtesting protocol | [docs/sops/backtesting-protocol.md](docs/sops/backtesting-protocol.md) |
+| Research methodology | [docs/sops/research-methodology.md](docs/sops/research-methodology.md) |
+| ML signal pipeline | [docs/sops/ml-signal-pipeline.md](docs/sops/ml-signal-pipeline.md) |
+| Portfolio allocation | [docs/sops/portfolio-allocation.md](docs/sops/portfolio-allocation.md) |
+| Execution & paper trading | [docs/sops/execution-and-paper-trading.md](docs/sops/execution-and-paper-trading.md) |
+| Git workflow | [docs/sops/git-workflow.md](docs/sops/git-workflow.md) |
+| Data handling | [docs/sops/data-handling.md](docs/sops/data-handling.md) |
+
+---
 
 ## Roadmap
 
-- [x] QuantCore data pipeline + indicators + feature engineering
-- [ ] AlphaEngine: Event-driven backtester with walk-forward
-- [ ] AlphaEngine: Momentum, mean-reversion, and stat-arb strategies
-- [ ] AlphaML: Gradient boosting + LSTM models
-- [ ] Risk: Kelly criterion + correlation-aware portfolio allocation
-- [ ] Dashboard: Streamlit real-time P&L and analytics
-- [ ] Execution: Alpaca paper trading integration
+- [x] **Phase 0** — Infrastructure: pyproject, CI/CD, data fetcher, indicators, features
+- [x] **Phase 1** — AlphaEngine: vectorized backtester, momentum + Bollinger, walk-forward, risk (87 tests)
+- [x] **Phase 2** — AlphaML: XGBoost + purged k-fold CV + MLSignalPipeline (129 tests)
+- [x] **Phase 3** — Portfolio: MeanVariance, RiskParity, CVaR, multi-asset backtester (162 tests)
+- [x] **Phase 4** — Dashboard + Paper Trading: Streamlit app, AlpacaBroker, PaperTrader (190 tests)
+- [ ] **Phase 5** — Derivatives Lab: Black-Scholes, Greeks, implied volatility, vol surface
+- [ ] **Phase 6** — Production: live execution, monitoring, alerting
+
+---
 
 ## License
 
 MIT
+
