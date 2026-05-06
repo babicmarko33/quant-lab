@@ -76,14 +76,14 @@ Phase 6: Dashboard Completion (COMPLETE — 433 tests total)
       5_Market_Data.py (OHLCV, returns, vol surface heatmap)
       12 chart helpers in charts.py
 
-Phase 7: Advanced Research (NEXT)
+Phase 7: Advanced Research (COMPLETE — 546 tests total)
   └── Phase B: GARCH volatility forecasting (arch library) — COMPLETE
   └── Phase C: Kalman filter + cointegration pairs trading — COMPLETE
   └── Phase D: HMM regime detection — COMPLETE
-  └── Phase E: Tradier live options chain + real IV surface
-  └── Phase F: Alpaca WebSocket live event loop + LiveTrader
-  └── Phase G: Fama-French 3/5-factor attribution
-  └── Phase H: FinRL reinforcement learning portfolio agent
+  └── Phase E: Tradier live options chain + real IV surface — COMPLETE
+  └── Phase F: Alpaca WebSocket live event loop + LiveTrader — COMPLETE
+  └── Phase G: Fama-French 3/5-factor attribution — COMPLETE
+  └── Phase H: PortfolioEnv gymnasium + RLPortfolioAgent PPO — COMPLETE
 ```
 
 ---

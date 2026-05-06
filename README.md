@@ -5,7 +5,7 @@
 [![CI](https://github.com/babicmarko33/quant-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/babicmarko33/quant-lab/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![433 tests](https://img.shields.io/badge/tests-433%20passing-brightgreen)](https://github.com/babicmarko33/quant-lab/actions)
+[![546 tests](https://img.shields.io/badge/tests-546%20passing-brightgreen)](https://github.com/babicmarko33/quant-lab/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -16,11 +16,14 @@
 quant-lab/
 ├── src/
 │   ├── quantcore/              # Shared data, indicators, feature engineering
-│   │   ├── data/               # Multi-source fetcher (yfinance -> Alpaca -> Polygon)
+│   │   ├── data/               # Multi-source fetcher (yfinance -> Alpaca -> Polygon),
+│   │   │                       # TradierClient (live options), FamaFrenchFetcher
 │   │   ├── indicators/         # Vectorized: SMA, EMA, RSI, MACD, BB, ATR
+│   │   ├── signals/            # Cointegration (Engle-Granger), KalmanFilter
 │   │   └── features/           # Feature pipeline with look-ahead bias protection
 │   ├── alpha_engine/           # Strategy development & backtesting
-│   │   ├── strategies/         # Momentum (12-1), Bollinger MR, SMA/EMA cross, RSI
+│   │   ├── strategies/         # Momentum (12-1), Bollinger MR, SMA/EMA cross, RSI,
+│   │   │                       # PairsStrategy (Kalman spread)
 │   │   ├── backtest/           # Vectorized engine + walk-forward + multi-asset backtester
 │   │   ├── analytics/          # Sharpe, Sortino, PSR, IC, turnover
 │   │   ├── risk/               # Kelly criterion, fractional Kelly, volatility targeting
@@ -31,7 +34,12 @@ quant-lab/
 │   │   │   ├── options/        # BSM+Greeks, IV solver, multi-leg strategies,
 │   │   │   │                   # Binomial CRR, MC (Eu/Asian/Barrier), PDE+PSOR,
 │   │   │   │                   # Merton PIDE, Variance Gamma
-│   │   │   └── volatility/     # SABR calibration, VolatilitySurface (cubic spline)
+│   │   │   └── volatility/     # SABR calibration, VolatilitySurface (cubic spline),
+│   │   │                       # GarchVolatilityModel (GARCH/EGARCH/GJR)
+│   │   ├── regime/             # GaussianHMM RegimeClassifier, RegimeFilteredStrategy
+│   │   ├── factor/             # FactorModel OLS (Fama-French alpha/betas/R²/t-stats)
+│   │   ├── live/               # AlpacaBarStream (WebSocket), LiveTrader
+│   │   ├── rl/                 # PortfolioEnv (gymnasium), RLPortfolioAgent (PPO/SB3)
 │   │   └── execution/          # Order, Broker ABC, AlpacaBroker, PaperTrader
 │   ├── alpha_ml/               # ML signal generation
 │   │   ├── features/           # FeatureStore: winsorize + z-score + target labels
@@ -40,14 +48,14 @@ quant-lab/
 │   │   ├── validation/         # PurgedKFold (Lopez de Prado), cross_val_predict_purged
 │   │   └── pipeline.py         # End-to-end OHLCV -> signals -> BacktestResult
 │   └── quant_dashboard/        # Streamlit multi-page analytics dashboard
-│       ├── components/charts.py# 12 pure Plotly chart factories (testable without Streamlit)
+│       ├── components/charts.py# Plotly chart factories (testable without Streamlit)
 │       └── pages/              # 1_Equity_Curve, 2_Portfolio, 3_ML_Signal,
-│                               # 4_Options_Pricing, 5_Market_Data
-├── tests/                      # 433 tests; strict TDD red-green-refactor
+│                               # 4_Options_Pricing, 5_Market_Data, 6_Regime_Analysis
+├── tests/                      # 546 tests; strict TDD red-green-refactor
 ├── scripts/                    # run_backtest.py, run_paper_trader.py
 ├── notebooks/                  # Research notebooks
 ├── docs/
-│   ├── sops/                   # 8 Standard Operating Procedures
+│   ├── sops/                   # Standard Operating Procedures
 │   └── plans/                  # Phase implementation plans
 └── data/                       # Local parquet cache (gitignored)
 ```
@@ -58,16 +66,19 @@ quant-lab/
 
 | Module | Highlights |
 |--------|-----------|
-| **Data** | Auto-fallback chain (yfinance -> Alpaca), local parquet caching, full OHLCV |
+| **Data** | Auto-fallback chain (yfinance -> Alpaca), local parquet caching, full OHLCV, TradierClient (live options), FamaFrenchFetcher (monthly 3-factor) |
 | **Indicators** | NumPy-vectorized: SMA, EMA, RSI (Wilder), MACD, Bollinger Bands, ATR |
 | **Backtesting** | Signal T -> fill T+1 OPEN, slippage/commission modeled, zero look-ahead |
 | **Walk-Forward** | Anchored folds with embargo (Lopez de Prado ch7), mean OOS Sharpe |
 | **ML Pipeline** | XGBoost + purged k-fold CV + PSR / IC evaluation |
 | **ML Models** | XGBoost, Ridge/Lasso classifiers, LSTM (PyTorch), ModelEnsemble soft-voting |
 | **Portfolio** | MV, Risk Parity (Spinu 2013), CVaR LP (Rockafellar-Uryasev), Cardinality MIQP, MC VaR/CVaR, Merton HJB, Black-Litterman |
-| **Derivatives** | BSM+full Greeks, IV solver (NR+Brent), Binomial CRR, MC options, PDE Crank-Nicolson+PSOR, Merton PIDE, Variance Gamma, SABR calibration, vol surface |
-| **Execution** | Alpaca paper trading; signal dedup; mock-testable broker interface |
-| **Dashboard** | 5-page Streamlit app: equity curve, portfolio, ML signals, options pricing, market data + vol surface |
+| **Derivatives** | BSM+full Greeks, IV solver (NR+Brent), Binomial CRR, MC options, PDE Crank-Nicolson+PSOR, Merton PIDE, Variance Gamma, SABR calibration, vol surface, GARCH/EGARCH/GJR |
+| **Regime** | GaussianHMM RegimeClassifier (posterior proba), RegimeFilteredStrategy |
+| **Factor** | FactorModel OLS — Fama-French alpha, betas, R², t-statistics |
+| **Live** | AlpacaBarStream (async WebSocket), LiveTrader rolling-buffer → signal |
+| **RL** | PortfolioEnv (gymnasium), RLPortfolioAgent (PPO via stable-baselines3) |
+| **Dashboard** | 6-page Streamlit app: equity curve, portfolio, ML signals, options pricing, market data, regime analysis |
 
 ---
 
@@ -83,7 +94,7 @@ pip install -e ".[ci]"
 # Copy and populate environment variables
 cp .env.example .env
 
-# Run all tests (433 passing)
+# Run all tests (546 passing)
 pytest -m "not integration" -q
 
 # Launch the dashboard

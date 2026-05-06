@@ -5,10 +5,10 @@ Uses statsmodels `coint` for the ADF test on residuals.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
-from itertools import combinations
 
 try:
     from statsmodels.tsa.stattools import coint  # type: ignore[import-untyped]

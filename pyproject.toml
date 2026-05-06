@@ -136,6 +136,8 @@ ignore = [
 "src/alpha_ml/**" = ["N803", "N806"]  # ML convention: X uppercase for feature matrices
 "src/alpha_engine/derivatives/**" = ["N803", "N806"]  # Finance convention: S, K, T, sigma uppercase
 "src/alpha_engine/portfolio/**" = ["N803", "N806", "S112"]  # Finance convention: Sigma, P, Q uppercase; solver loop
+"src/quantcore/signals/**" = ["N803", "N806"]  # Kalman filter: Q, R, P, F, K, S uppercase convention
+"src/alpha_engine/strategies/pairs.py" = ["SIM114"]  # Pairs strategy exit logic: separate branches are clearer
 
 [tool.ruff.lint.isort]
 known-first-party = ["quantcore", "alpha_engine", "alpha_ml", "quant_dashboard"]

@@ -1,7 +1,7 @@
 # quant-lab — Project Handoff Document
 
 **Date:** 2026-05-06  
-**State:** All Phases 0–6 complete. 433 tests passing. Phase 7 ready to begin.
+**State:** All Phases 0–6 + Phase 7 (A–H) complete. 546 tests passing.
 
 ---
 
@@ -11,26 +11,29 @@ quant-lab is an institutional-grade quantitative finance monorepo with:
 
 | Layer | What's in it |
 |-------|-------------|
-| **Data** | Multi-source OHLCV fetcher (yfinance → Alpaca fallback), parquet cache, OHLCV schema validation |
+| **Data** | Multi-source OHLCV fetcher (yfinance → Alpaca fallback), parquet cache, OHLCV schema validation, FamaFrenchFetcher (monthly 3-factor), TradierClient (live options chain) |
 | **Indicators** | NumPy-vectorized: SMA, EMA, RSI (Wilder), MACD, Bollinger Bands, ATR |
-| **Strategies** | Momentum (12-1 cross-sectional), Bollinger mean-reversion, SMA/EMA cross, RSI MR |
+| **Strategies** | Momentum (12-1 cross-sectional), Bollinger mean-reversion, SMA/EMA cross, RSI MR, PairsStrategy (Kalman spread), RegimeFilteredStrategy (HMM gate) |
 | **Backtesting** | Vectorized engine (signal T → fill T+1 OPEN), walk-forward with embargo, multi-asset |
 | **Analytics** | Sharpe, Sortino, Calmar, max drawdown, PSR, IC, turnover |
 | **Risk** | Kelly criterion, fractional Kelly, volatility targeting |
 | **Portfolio** | 8 allocators: EqualWeight, MeanVariance, RiskParity (ERC), CVaR LP, Cardinality MIQP (SCIP), MC VaR/CVaR (Cholesky), Merton HJB (stochastic control), Black-Litterman |
-| **Derivatives** | BSM + full Greeks, IV solver (NR+Brent), multi-leg strategies, Binomial CRR, MC (European/Asian/Barrier), Crank-Nicolson PDE + PSOR, Merton jump-diffusion PIDE, Variance Gamma MC, SABR calibration, VolatilitySurface |
+| **Derivatives** | BSM + full Greeks, IV solver (NR+Brent), multi-leg strategies, Binomial CRR, MC (European/Asian/Barrier), Crank-Nicolson PDE + PSOR, Merton jump-diffusion PIDE, Variance Gamma MC, SABR calibration, VolatilitySurface, GarchVolatilityModel |
 | **ML** | XGBoost, Ridge/Lasso classifiers, LSTM (PyTorch sliding-window), ModelEnsemble (soft-voting); PurgedKFold; FeatureStore |
-| **Execution** | Alpaca REST paper trading, signal deduplication, mock-testable Broker ABC |
-| **Dashboard** | 5-page Streamlit app: Equity Curve, Portfolio Weights, ML Signals, Options Pricing, Market Data + Vol Surface |
+| **Factor** | FactorModel OLS attribution (alpha, betas, R², t-stats) against Fama-French 3-factor |
+| **Regime** | GaussianHMM RegimeClassifier (n_regimes, predict_proba), RegimeFilteredStrategy wrapper |
+| **Live** | AlpacaBarStream (WebSocket), LiveTrader (rolling buffer → strategy signal), AlpacaBroker paper trading |
+| **RL** | PortfolioEnv (gymnasium Env, log-return reward), RLPortfolioAgent (PPO via stable-baselines3) |
+| **Dashboard** | 6-page Streamlit app: Equity Curve, Portfolio Weights, ML Signals, Options Pricing, Market Data + Vol Surface, Regime Analysis |
 
 ---
 
 ## 2. Current Test Count
 
 ```
-433 tests — all passing
-Run: pytest -q --tb=short
-Lint: ruff check src/ tests/  →  0 errors
+546 tests — all passing
+Run: & "..\.venv\Scripts\python.exe" -m pytest tests/ -q --tb=short
+Lint: & "..\.venv\Scripts\ruff.exe" check src/ tests/  →  0 errors
 ```
 
 ---
@@ -87,27 +90,20 @@ Fastest iteration for research dashboards. Not intended for production user-faci
 
 ---
 
-## 6. Phase 7 — What Comes Next
+## 6. Phase 7 — Completed
 
-Phase 7 is the Advanced Research track. Install dependencies first:
+All Phase 7 sub-phases are complete:
 
-```powershell
-pip install "arch>=6.3" "hmmlearn>=0.3" "statsmodels>=0.14" "filterpy>=1.4" "websocket-client>=1.7" "stable-baselines3>=2.3" "gymnasium>=0.29"
-```
-
-Phases in order:
-
-| Phase | Module | Key files to create |
-|-------|--------|-------------------|
-| B | GARCH | `src/alpha_engine/derivatives/volatility/garch.py` |
-| C | Kalman/Pairs | `src/quantcore/signals/cointegration.py`, `src/quantcore/signals/kalman_filter.py`, `src/alpha_engine/strategies/pairs.py` |
-| D | HMM Regime | `src/alpha_engine/regime/hmm_classifier.py`, `src/alpha_engine/strategies/regime_filtered.py` |
-| E | Tradier Options | `src/quantcore/data/tradier_client.py` |
-| F | Live Event Loop | `src/alpha_engine/execution/alpaca_stream.py`, `src/alpha_engine/execution/live_trader.py` |
-| G | Fama-French | `src/quantcore/data/fama_french.py`, `src/alpha_engine/analytics/factor_model.py` |
-| H | FinRL | `src/alpha_ml/rl/portfolio_env.py`, `src/alpha_ml/rl/rl_agent.py` |
-
-All phases use strict TDD: write failing test first, show RED, implement, show GREEN, commit.
+| Phase | Module | Status |
+|-------|--------|--------|
+| A | Infrastructure (GitNexus, README, CHANGELOG, SOPs) | ✅ |
+| B | GARCH volatility forecasting | ✅ 21 tests |
+| C | Kalman filter + Pairs strategy | ✅ 30 tests |
+| D | HMM Regime classifier + Streamlit page | ✅ 18 tests |
+| E | Tradier REST options client | ✅ 10 tests |
+| F | AlpacaBarStream + LiveTrader | ✅ 12 tests |
+| G | FamaFrenchFetcher + FactorModel OLS | ✅ 11 tests |
+| H | PortfolioEnv (gymnasium) + RLPortfolioAgent (PPO) | ✅ 11 tests |
 
 ---
 
