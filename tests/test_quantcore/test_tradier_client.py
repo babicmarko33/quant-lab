@@ -15,7 +15,6 @@ from quantcore.data.tradier_client import (
     TradierClient,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -226,6 +225,5 @@ def test_get_option_chain_raises_on_http_error():
     mock_resp = MagicMock()
     mock_resp.raise_for_status.side_effect = requests.HTTPError("403 Forbidden")
 
-    with patch.object(client._session, "get", return_value=mock_resp):
-        with pytest.raises(requests.HTTPError):
-            client.get_option_chain("SPY", "2024-12-20")
+    with patch.object(client._session, "get", return_value=mock_resp), pytest.raises(requests.HTTPError):
+        client.get_option_chain("SPY", "2024-12-20")

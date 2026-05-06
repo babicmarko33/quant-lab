@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 import pandas as pd
 import requests
 
-
 _SANDBOX_URL = "https://sandbox.tradier.com/v1"
 _PRODUCTION_URL = "https://api.tradier.com/v1"
 
@@ -224,13 +223,12 @@ class TradierClient:
             raw_options = [raw_options]
 
         quotes = [OptionQuote.from_dict(o) for o in raw_options]
-        chain = OptionChain(
+        return OptionChain(
             ticker=ticker,
             expiration_date=expiration,
             calls=[q for q in quotes if q.option_type == "call"],
             puts=[q for q in quotes if q.option_type == "put"],
         )
-        return chain
 
     def get_quote(self, ticker: str) -> float:
         """Return the last traded price for an equity ticker.

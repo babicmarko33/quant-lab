@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-05-06
+
+### Added — Phase E: Tradier Options Client (10 tests)
+- `src/quantcore/data/tradier_client.py` — `TradierClient` with `get_expirations`, `get_option_chain`, `get_quote`; `OptionQuote` dataclass (strike, greeks, mid_iv); `OptionChain.to_dataframe()` — all HTTP mocked in tests; sandbox/production URL selection; token from env or constructor
+
+---
+
 ## [1.3.0] — 2026-05-06
 
 ### Added — Phase D: HMM Regime Detection (18 tests)
