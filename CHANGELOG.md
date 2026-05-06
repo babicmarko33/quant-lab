@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-05-06
+
+### Added — Phase F: Alpaca Live Trading (12 tests)
+- `src/alpha_engine/live/alpaca_stream.py` — `BarEvent` dataclass + `AlpacaBarStream`; WebSocket connect/auth/subscribe flow; `_auth_message`, `_subscribe_message`; paper/live URL selection; `run()` async loop (requires `websockets`)
+- `src/alpha_engine/live/live_trader.py` — `LiveTrader` rolling bar buffer; wires any `Strategy` to `on_bar` callback; emits `{-1, 0, 1}` signals via `on_signal`; configurable `min_bars` and `max_buffer`
+
+---
+
 ## [1.4.0] — 2026-05-06
 
 ### Added — Phase E: Tradier Options Client (10 tests)
