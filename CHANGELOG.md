@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-05-06
+
+### Added — Phase G: Fama-French Factor Attribution (11 tests)
+- `src/quantcore/data/fama_french.py` — `FamaFrenchFetcher.fetch_3_factor()`; downloads monthly CSV from French data library; parses header/data blocks; returns decimal-form DatetimeIndex DataFrame (5 tests)
+- `src/alpha_engine/factor/factor_model.py` — `FactorModel.fit(returns, factors) -> FactorResult`; OLS via `np.linalg.lstsq`; excess return vs RF; alpha (annualised), betas dict, R², residuals, t-stats (6 tests)
+
+---
+
 ## [1.5.0] — 2026-05-06
 
 ### Added — Phase F: Alpaca Live Trading (12 tests)
