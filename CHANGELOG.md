@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-05-06
+
+### Added — Phase C: Kalman/Pairs Trading (30 tests)
+- `src/quantcore/signals/cointegration.py` — `engle_granger_test`, `find_cointegrated_pairs`, `hedge_ratio` via statsmodels (13 tests)
+- `src/quantcore/signals/kalman_filter.py` — `KalmanPairFilter` dynamic hedge ratio + z-score via state-space model (9 tests)
+- `src/alpha_engine/strategies/pairs.py` — `PairsStrategy` entry/exit on Kalman z-score (8 tests)
+
+---
+
 ## [1.1.0] — 2026-05-06
 
 ### Added — Phase B: GARCH Volatility Forecasting (21 tests)
