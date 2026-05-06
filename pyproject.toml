@@ -125,6 +125,7 @@ ignore = [
 "tests/**" = ["S101", "S106", "N802", "N803", "N806"]  # ML/quant fixture names use X uppercase
 "src/alpha_ml/**" = ["N803", "N806"]  # ML convention: X uppercase for feature matrices
 "src/alpha_engine/derivatives/**" = ["N803", "N806"]  # Finance convention: S, K, T, sigma uppercase
+"src/alpha_engine/portfolio/**" = ["N803", "N806", "S112"]  # Finance convention: Sigma, P, Q uppercase; solver loop
 
 [tool.ruff.lint.isort]
 known-first-party = ["quantcore", "alpha_engine", "alpha_ml", "quant_dashboard"]
