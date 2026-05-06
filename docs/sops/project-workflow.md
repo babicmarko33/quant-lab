@@ -77,9 +77,9 @@ Phase 6: Dashboard Completion (COMPLETE — 433 tests total)
       12 chart helpers in charts.py
 
 Phase 7: Advanced Research (NEXT)
-  └── Phase B: GARCH volatility forecasting (arch library)
-  └── Phase C: Kalman filter + cointegration pairs trading
-  └── Phase D: HMM regime detection
+  └── Phase B: GARCH volatility forecasting (arch library) — COMPLETE
+  └── Phase C: Kalman filter + cointegration pairs trading — COMPLETE
+  └── Phase D: HMM regime detection — COMPLETE
   └── Phase E: Tradier live options chain + real IV surface
   └── Phase F: Alpaca WebSocket live event loop + LiveTrader
   └── Phase G: Fama-French 3/5-factor attribution

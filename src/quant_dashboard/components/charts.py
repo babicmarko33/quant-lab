@@ -431,3 +431,93 @@ def feature_importance_fig(importance: pd.Series) -> go.Figure:
         margin=dict(l=120, r=20, t=50, b=20),
     )
     return fig
+
+
+def regime_timeline_fig(
+    prices: pd.Series,
+    regimes: np.ndarray,
+    n_regimes: int = 2,
+    title: str = "Regime Classification Timeline",
+) -> go.Figure:
+    """Price line overlaid with colour-coded regime background bands.
+
+    Parameters
+    ----------
+    prices : pd.Series
+        Close prices with DatetimeIndex.
+    regimes : np.ndarray
+        Integer regime labels aligned to ``prices``.
+    n_regimes : int
+        Total number of regime states.
+    title : str
+        Chart title.
+    """
+    palette = ["rgba(0,180,216,0.18)", "rgba(255,107,107,0.18)",
+               "rgba(6,214,160,0.18)", "rgba(255,183,3,0.18)"]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=prices.index, y=prices.values,
+        name="Close", line=dict(color="#90E0EF", width=1.5),
+    ))
+    idx = prices.index
+    for regime in range(n_regimes):
+        mask = regimes == regime
+        if not mask.any():
+            continue
+        # Draw contiguous bands
+        in_band = False
+        band_start = None
+        for i, val in enumerate(mask):
+            if val and not in_band:
+                band_start = idx[i]
+                in_band = True
+            elif not val and in_band:
+                fig.add_vrect(
+                    x0=band_start, x1=idx[i - 1],
+                    fillcolor=palette[regime % len(palette)],
+                    layer="below", line_width=0,
+                    annotation_text=f"R{regime}" if i < 5 else "",
+                )
+                in_band = False
+        if in_band:
+            fig.add_vrect(
+                x0=band_start, x1=idx[-1],
+                fillcolor=palette[regime % len(palette)],
+                layer="below", line_width=0,
+            )
+    fig.update_layout(
+        title=title, template="plotly_dark",
+        yaxis_title="Price",
+        margin=dict(l=40, r=20, t=50, b=20),
+        showlegend=True,
+    )
+    return fig
+
+
+def regime_vol_bar_fig(
+    regime_stats: pd.DataFrame,
+    title: str = "Per-Regime Volatility",
+) -> go.Figure:
+    """Bar chart of annualised volatility per regime.
+
+    Parameters
+    ----------
+    regime_stats : pd.DataFrame
+        DataFrame with columns ``regime``, ``ann_vol``, ``mean_ret``.
+    title : str
+        Chart title.
+    """
+    fig = go.Figure(go.Bar(
+        x=[f"Regime {r}" for r in regime_stats["regime"]],
+        y=regime_stats["ann_vol"].values,
+        marker_color=["#00B4D8", "#FF6B6B", "#06D6A0", "#FFB703"][: len(regime_stats)],
+        text=[f"{v:.1%}" for v in regime_stats["ann_vol"]],
+        textposition="outside",
+    ))
+    fig.update_layout(
+        title=title, template="plotly_dark",
+        yaxis_tickformat=".0%",
+        yaxis_title="Ann. Volatility",
+        margin=dict(l=40, r=20, t=50, b=40),
+    )
+    return fig

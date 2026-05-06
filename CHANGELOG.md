@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-05-06
+
+### Added — Phase D: HMM Regime Detection (18 tests)
+- `src/alpha_engine/regime/hmm_classifier.py` — `RegimeClassifier` using hmmlearn 0.3 GaussianHMM; `fit`, `predict`, `predict_proba`; multi-feature (return + abs_return); 2–4 regimes supported (11 tests)
+- `src/alpha_engine/regime/regime_filtered_strategy.py` — `RegimeFilteredStrategy` wraps any `Strategy`, zeroes signals in non-active regimes (7 tests)
+- `src/quant_dashboard/pages/6_Regime_Analysis.py` — 3-tab dashboard: Regime Timeline with vrect bands + posterior probabilities, Per-Regime statistics, Filtered vs Unfiltered backtest comparison
+- `regime_timeline_fig` + `regime_vol_bar_fig` chart helpers added to `charts.py`
+
+---
+
 ## [1.2.0] — 2026-05-06
 
 ### Added — Phase C: Kalman/Pairs Trading (30 tests)
