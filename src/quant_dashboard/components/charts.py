@@ -158,6 +158,251 @@ def correlation_heatmap_fig(returns_df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+def payoff_fig(
+    strikes: np.ndarray,
+    payoffs: np.ndarray,
+    spot: float,
+    title: str = "Option Payoff at Expiry",
+) -> go.Figure:
+    """Line chart of option payoff profile at expiry.
+
+    Parameters
+    ----------
+    strikes : np.ndarray
+        Range of spot prices at expiry.
+    payoffs : np.ndarray
+        Corresponding net payoff values.
+    spot : float
+        Current spot price (shown as a vertical line).
+    title : str
+        Chart title.
+    """
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=strikes, y=payoffs,
+        name="Payoff",
+        line=dict(color="#00B4D8", width=2),
+        fill="tozeroy",
+        fillcolor="rgba(0,180,216,0.15)",
+    ))
+    fig.add_vline(x=spot, line_dash="dash", line_color="#FFB703",
+                  annotation_text=f"S={spot:.0f}", annotation_position="top right")
+    fig.add_hline(y=0, line_color="rgba(255,255,255,0.3)", line_width=1)
+    fig.update_layout(
+        title=title,
+        template="plotly_dark",
+        xaxis_title="Spot at Expiry",
+        yaxis_title="Profit / Loss",
+        margin=dict(l=40, r=20, t=50, b=40),
+    )
+    return fig
+
+
+def greeks_sensitivity_fig(
+    param_values: np.ndarray,
+    greek_series: dict[str, np.ndarray],
+    param_label: str = "Spot",
+    title: str = "Greeks Sensitivity",
+) -> go.Figure:
+    """Multi-line chart of Greeks across a parameter range.
+
+    Parameters
+    ----------
+    param_values : np.ndarray
+        X-axis values (e.g. spot range).
+    greek_series : dict[str, np.ndarray]
+        Mapping from Greek name → values array.
+    param_label : str
+        X-axis label.
+    title : str
+        Chart title.
+    """
+    colours = ["#00B4D8", "#90E0EF", "#FFB703", "#FF6B6B", "#06D6A0"]
+    fig = go.Figure()
+    for (name, vals), colour in zip(greek_series.items(), colours, strict=False):
+        fig.add_trace(go.Scatter(
+            x=param_values, y=vals,
+            name=name, line=dict(color=colour, width=2),
+        ))
+    fig.update_layout(
+        title=title,
+        template="plotly_dark",
+        xaxis_title=param_label,
+        legend=dict(orientation="h"),
+        margin=dict(l=40, r=20, t=50, b=40),
+    )
+    return fig
+
+
+def model_comparison_bar_fig(model_prices: dict[str, float], title: str = "Model Price Comparison") -> go.Figure:
+    """Bar chart comparing prices from multiple models.
+
+    Parameters
+    ----------
+    model_prices : dict[str, float]
+        Model name → price.
+    title : str
+        Chart title.
+    """
+    names = list(model_prices.keys())
+    prices = [model_prices[n] for n in names]
+    fig = go.Figure(go.Bar(
+        x=names, y=prices,
+        marker_color=["#00B4D8", "#48CAE4", "#90E0EF", "#ADE8F4", "#CAF0F8"][:len(names)],
+        text=[f"{p:.4f}" for p in prices],
+        textposition="outside",
+    ))
+    fig.update_layout(
+        title=title,
+        template="plotly_dark",
+        yaxis_title="Option Price",
+        margin=dict(l=40, r=20, t=50, b=40),
+    )
+    return fig
+
+
+def ohlcv_fig(df: pd.DataFrame, title: str = "Price History") -> go.Figure:
+    """Candlestick chart with volume subplot.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        OHLCV DataFrame with columns: open, high, low, close, volume.
+        DatetimeIndex preferred.
+    title : str
+        Chart title.
+    """
+    fig = make_subplots(
+        rows=2, cols=1, shared_xaxes=True,
+        row_heights=[0.75, 0.25], vertical_spacing=0.04,
+    )
+    fig.add_trace(go.Candlestick(
+        x=df.index, open=df["open"], high=df["high"],
+        low=df["low"], close=df["close"], name="OHLC",
+        increasing_line_color="#06D6A0", decreasing_line_color="#FF6B6B",
+    ), row=1, col=1)
+    fig.add_trace(go.Bar(
+        x=df.index, y=df["volume"], name="Volume",
+        marker_color="rgba(0,180,216,0.4)",
+    ), row=2, col=1)
+    fig.update_layout(
+        title=title, template="plotly_dark", height=520,
+        xaxis_rangeslider_visible=False,
+        margin=dict(l=40, r=20, t=50, b=20),
+    )
+    return fig
+
+
+def rolling_vol_fig(
+    returns: pd.Series,
+    windows: list[int] | None = None,
+    title: str = "Rolling Annualised Volatility",
+) -> go.Figure:
+    """Line chart of rolling annualised volatility.
+
+    Parameters
+    ----------
+    returns : pd.Series
+        Daily arithmetic returns with DatetimeIndex.
+    windows : list[int]
+        Rolling window sizes in days. Default [20, 60, 120].
+    title : str
+        Chart title.
+    """
+    if windows is None:
+        windows = [20, 60, 120]
+    colours = ["#00B4D8", "#FFB703", "#FF6B6B", "#06D6A0"]
+    fig = go.Figure()
+    for w, colour in zip(windows, colours, strict=False):
+        rv = returns.rolling(w).std() * np.sqrt(252)
+        fig.add_trace(go.Scatter(
+            x=rv.index, y=rv.values,
+            name=f"{w}d", line=dict(color=colour, width=1.5),
+        ))
+    fig.update_layout(
+        title=title, template="plotly_dark",
+        yaxis_tickformat=".0%",
+        legend=dict(orientation="h"),
+        margin=dict(l=40, r=20, t=50, b=20),
+    )
+    return fig
+
+
+def vol_surface_heatmap_fig(
+    strikes: np.ndarray,
+    expiries: np.ndarray,
+    ivs: np.ndarray,
+    title: str = "Implied Volatility Surface",
+) -> go.Figure:
+    """Heatmap of implied vols across strikes and expiries.
+
+    Parameters
+    ----------
+    strikes : np.ndarray
+        Strike values (columns), shape (n_strikes,).
+    expiries : np.ndarray
+        Expiry values in years (rows), shape (n_expiries,).
+    ivs : np.ndarray
+        Implied vol matrix, shape (n_expiries, n_strikes).
+    title : str
+        Chart title.
+    """
+    fig = go.Figure(go.Heatmap(
+        z=ivs * 100,  # convert to %
+        x=[f"{k:.0f}" for k in strikes],
+        y=[f"{t:.2f}y" for t in expiries],
+        colorscale="Viridis",
+        colorbar=dict(title="IV (%)"),
+        text=np.round(ivs * 100, 1),
+        texttemplate="%{text}%",
+    ))
+    fig.update_layout(
+        title=title, template="plotly_dark",
+        xaxis_title="Strike", yaxis_title="Expiry",
+        margin=dict(l=60, r=20, t=50, b=40),
+    )
+    return fig
+
+
+def sabr_smile_fig(
+    strikes: np.ndarray,
+    market_vols: np.ndarray | None,
+    model_vols: np.ndarray,
+    title: str = "SABR Vol Smile",
+) -> go.Figure:
+    """Overlay of SABR model smile vs market quotes.
+
+    Parameters
+    ----------
+    strikes : np.ndarray
+        Strike values.
+    market_vols : np.ndarray | None
+        Observed market IV (can be None if no market data).
+    model_vols : np.ndarray
+        SABR-implied vols.
+    title : str
+        Chart title.
+    """
+    fig = go.Figure()
+    if market_vols is not None:
+        fig.add_trace(go.Scatter(
+            x=strikes, y=market_vols * 100,
+            mode="markers", name="Market",
+            marker=dict(color="#FFB703", size=8, symbol="circle"),
+        ))
+    fig.add_trace(go.Scatter(
+        x=strikes, y=model_vols * 100,
+        name="SABR", line=dict(color="#00B4D8", width=2),
+    ))
+    fig.update_layout(
+        title=title, template="plotly_dark",
+        xaxis_title="Strike", yaxis_title="Implied Vol (%)",
+        legend=dict(orientation="h"),
+        margin=dict(l=40, r=20, t=50, b=40),
+    )
+    return fig
+
+
 def feature_importance_fig(importance: pd.Series) -> go.Figure:
     """Horizontal bar chart of feature importances, sorted ascending (highest at top).
 

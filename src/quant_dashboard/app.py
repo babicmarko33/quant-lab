@@ -22,6 +22,8 @@ Use the sidebar to navigate between modules:
 | Equity Curve | Backtest results, drawdown analysis |
 | Portfolio | Multi-asset allocation weights + correlation |
 | ML Signal | XGBoost predictions, feature importance |
+| Options Pricing | BSM / Binomial / MC / PDE prices + Greeks + SABR smile |
+| Market Data | Live OHLCV, return analytics, SABR vol surface |
 """
 )
 st.info("Select a page from the sidebar to get started.")
