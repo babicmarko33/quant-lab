@@ -7,6 +7,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-05-06
+
+### Added — Phase H: PortfolioEnv + RLPortfolioAgent (11 tests)
+- `src/alpha_engine/rl/portfolio_env.py` — `PortfolioEnv(prices, lookback=20)`; gymnasium-compatible Env; Box observation (lookback×n_assets log-returns, clipped [-5,5]); Box action (per-asset weights [0,1], normalised to sum=1 inside step); log-return reward; episode terminates on price exhaustion (7 tests)
+- `src/alpha_engine/rl/rl_agent.py` — `RLPortfolioAgent(env, total_timesteps=10_000)`; PPO via stable-baselines3; `train() -> self`; `predict(obs) -> np.ndarray` normalised weights; `save(path)` / `load(path)` (4 tests)
+
+---
+
 ## [1.6.0] — 2026-05-06
 
 ### Added — Phase G: Fama-French Factor Attribution (11 tests)
