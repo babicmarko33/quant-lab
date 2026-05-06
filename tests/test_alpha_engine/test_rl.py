@@ -8,6 +8,8 @@ import pytest
 from alpha_engine.rl.portfolio_env import PortfolioEnv
 from alpha_engine.rl.rl_agent import RLPortfolioAgent
 
+pytestmark = pytest.mark.slow
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

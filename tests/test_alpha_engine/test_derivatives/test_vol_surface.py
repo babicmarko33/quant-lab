@@ -171,3 +171,71 @@ class TestFromGarchForecasts:
                 strikes=[100.0],
                 spot=100.0,
             )
+
+
+# ---------------------------------------------------------------------------
+# from_options_chain tests
+# ---------------------------------------------------------------------------
+
+class TestFromOptionsChain:
+    """Tests for VolatilitySurface.from_options_chain()."""
+
+    @pytest.fixture
+    def mock_chain_df(self):
+        """Synthetic OptionChain-style DataFrame with mid_iv populated."""
+        rows = []
+        for expiry in ["2026-06-20", "2026-09-19"]:
+            T = 0.125 if expiry == "2026-06-20" else 0.375
+            for strike in [95.0, 100.0, 105.0, 110.0]:
+                moneyness = abs(strike - 100.0) / 100.0
+                rows.append({
+                    "strike": strike,
+                    "expiry": expiry,
+                    "mid_iv": 0.20 + 0.04 * moneyness,
+                    "bid": 1.0,
+                    "ask": 1.2,
+                    "delta": 0.5,
+                    "expiry_years": T,
+                })
+        return pd.DataFrame(rows)
+
+    def test_returns_vol_surface(self, mock_chain_df):
+        """from_options_chain returns a fitted VolatilitySurface."""
+        surf = VolatilitySurface.from_options_chain(mock_chain_df)
+        assert isinstance(surf, VolatilitySurface)
+
+    def test_can_interpolate_after_construction(self, mock_chain_df):
+        """Surface can interpolate at a valid (expiry, strike) point."""
+        surf = VolatilitySurface.from_options_chain(mock_chain_df)
+        iv = surf.interpolate(strike=100.0, expiry=0.125)
+        assert isinstance(iv, float)
+        assert 0.0 < iv < 2.0
+
+    def test_iv_values_are_positive(self, mock_chain_df):
+        """All IVs in the constructed surface are positive."""
+        surf = VolatilitySurface.from_options_chain(mock_chain_df)
+        grid = surf.surface_grid(
+            strikes=[95.0, 100.0, 105.0, 110.0],
+            expiries=[0.125, 0.375],
+        )
+        assert (grid.values > 0).all()
+
+    def test_iv_reflects_smile_shape(self, mock_chain_df):
+        """OTM strikes have higher IV than ATM (smile present)."""
+        surf = VolatilitySurface.from_options_chain(mock_chain_df)
+        iv_atm = surf.interpolate(strike=100.0, expiry=0.125)
+        iv_otm = surf.interpolate(strike=110.0, expiry=0.125)
+        assert iv_otm > iv_atm
+
+    def test_raises_on_missing_iv_column(self):
+        """Raises ValueError if mid_iv or expiry_years columns are absent."""
+        bad_df = pd.DataFrame({"strike": [100.0], "expiry": ["2026-06-20"]})
+        with pytest.raises(ValueError, match="mid_iv|expiry_years"):
+            VolatilitySurface.from_options_chain(bad_df)
+
+    def test_filters_zero_iv_rows(self, mock_chain_df):
+        """Rows with mid_iv == 0 are excluded before fitting."""
+        mock_chain_df.loc[mock_chain_df["strike"] == 95.0, "mid_iv"] = 0.0
+        # Should not raise — just uses remaining valid rows
+        surf = VolatilitySurface.from_options_chain(mock_chain_df)
+        assert surf is not None

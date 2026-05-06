@@ -7,6 +7,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.8.0] — 2026-05-06
+
+### Added — Phase J: Integration & Final Hardening
+- `src/alpha_engine/derivatives/volatility/surface.py` — `VolatilitySurface.from_options_chain(chain_df)` classmethod; builds live vol surface from `TradierClient.get_option_chain().to_dataframe()`; filters zero/NaN IV rows; 6 new tests (total vol surface tests: 20)
+- `src/alpha_engine/rl/rl_strategy.py` — `RLStrategy(Strategy)` wires `RLPortfolioAgent` into `BacktestEngine`; `generate_signals(df)` trains PPO and replays to emit {-1,0,+1} signals; 7 tests (marked `slow`)
+- `src/alpha_engine/factor/regime_factor_model.py` — `RegimeFactorModel.fit(returns, factors, regimes) -> dict[int, RegimeFactorResult]`; runs OLS per HMM regime; `summary()` → tidy DataFrame; 10 tests
+- `src/quant_dashboard/pages/7_Factor_Attribution.py` — Streamlit page: overall Fama-French OLS (alpha, betas, R², residual plot); optional regime-split via HMM + `RegimeFactorModel`; alpha/beta bar charts by regime
+- `pyproject.toml` — `ci` extra now includes `phase7` (hmmlearn, statsmodels, arch, gymnasium, stable-baselines3); RL tests marked `slow` (excluded from CI by default)
+- `.github/workflows/ci.yml` — comment updated to document phase7 deps
+
+---
+
 ## [1.7.0] — 2026-05-06
 
 ### Added — Phase H: PortfolioEnv + RLPortfolioAgent (11 tests)

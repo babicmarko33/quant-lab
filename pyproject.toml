@@ -84,7 +84,7 @@ dev = [
 ]
 # Minimal set required to run the full test suite in CI
 ci = [
-    "quant-lab[dev,ml,dashboard]",
+    "quant-lab[dev,ml,dashboard,phase7]",
 ]
 # Everything (excludes heavy deep-learning and third-party providers)
 all = ["quant-lab[ml,backtest,dashboard,providers,dev]"]

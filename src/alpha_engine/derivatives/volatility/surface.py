@@ -141,3 +141,51 @@ class VolatilitySurface:
         surface = cls()
         surface.fit(pd.DataFrame(rows))
         return surface
+
+    @classmethod
+    def from_options_chain(cls, chain: pd.DataFrame) -> VolatilitySurface:
+        """Build a volatility surface from a live options chain DataFrame.
+
+        The DataFrame must contain columns ``mid_iv`` (implied volatility as
+        decimal, e.g. 0.25 = 25%) and ``expiry_years`` (time to expiry in
+        years).  Rows with ``mid_iv == 0`` or NaN are silently dropped before
+        fitting.
+
+        Parameters
+        ----------
+        chain:
+            DataFrame with at minimum columns ``strike``, ``expiry_years``,
+            ``mid_iv``.  Compatible with the output of
+            ``TradierClient.get_option_chain(...).to_dataframe()`` after
+            adding an ``expiry_years`` column.
+
+        Returns
+        -------
+        VolatilitySurface fitted on the (expiry, strike, iv) grid derived
+        from the live chain.
+
+        Raises
+        ------
+        ValueError
+            If required columns ``mid_iv`` or ``expiry_years`` are absent.
+        """
+        required = {"mid_iv", "expiry_years", "strike"}
+        missing = required - set(chain.columns)
+        if missing:
+            raise ValueError(
+                f"chain DataFrame missing required columns: {missing}. "
+                f"Got: {list(chain.columns)}"
+            )
+
+        # Drop invalid rows
+        valid = chain[(chain["mid_iv"] > 0) & chain["mid_iv"].notna()].copy()
+
+        data = pd.DataFrame({
+            "expiry": valid["expiry_years"].astype(float),
+            "strike": valid["strike"].astype(float),
+            "iv": valid["mid_iv"].astype(float),
+        })
+
+        surface = cls()
+        surface.fit(data)
+        return surface
