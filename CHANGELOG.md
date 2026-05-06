@@ -7,6 +7,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-05-06
+
+### Added — Phase B: GARCH Volatility Forecasting (21 tests)
+- `src/alpha_engine/derivatives/volatility/garch.py` — `fit_garch`, `forecast_volatility`, `garch_vol_forecast`; GARCH(p,q) via arch 8.0; returns/variance decimal-scaling; stationarity check (14 tests)
+- `VolatilitySurface.from_garch_forecasts()` — builds term-structure surface from GARCH daily vol forecasts (7 tests)
+- `arch>=6.3`, `statsmodels>=0.14` added to `pyproject.toml` `[phase7]` extras
+
+---
+
 ## [1.0.0] — 2026-05-06
 
 ### Added — Phase 6: Dashboard Completion

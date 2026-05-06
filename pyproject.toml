@@ -45,6 +45,16 @@ deep-learning = [
     "torch>=2.1",
     "numba>=0.58",
 ]
+# Phase 7 advanced research extras
+phase7 = [
+    "arch>=6.3",
+    "statsmodels>=0.14",
+    "hmmlearn>=0.3",
+    "filterpy>=1.4",
+    "websocket-client>=1.7",
+    "stable-baselines3>=2.3",
+    "gymnasium>=0.29",
+]
 # Historical backtesting ecosystem extras (optional)
 backtest = [
     "quantstats>=0.0.62",
