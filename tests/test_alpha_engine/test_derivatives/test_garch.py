@@ -64,7 +64,8 @@ class TestFitGarch:
         assert len(result.beta) == 2
 
     def test_raises_on_too_short_series(self):
-        short = pd.Series(np.random.standard_normal(30) * 0.01)
+        rng = np.random.default_rng(0)
+        short = pd.Series(rng.standard_normal(30) * 0.01)
         with pytest.raises(ValueError, match="at least 50"):
             fit_garch(short)
 
