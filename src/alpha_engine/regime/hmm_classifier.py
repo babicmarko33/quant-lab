@@ -59,7 +59,7 @@ class RegimeClassifier:
                 f"returns must have at least {min_obs} observations, got {len(returns)}"
             )
 
-        X = self._build_features(returns)
+        features = self._build_features(returns)
 
         self._model = GaussianHMM(
             n_components=self.n_regimes,
@@ -67,7 +67,7 @@ class RegimeClassifier:
             n_iter=self.n_iter,
             random_state=self.random_state,
         )
-        self._model.fit(X)
+        self._model.fit(features)
         return self
 
     def predict(self, returns: pd.Series) -> np.ndarray:
@@ -78,8 +78,8 @@ class RegimeClassifier:
         np.ndarray of int labels with shape ``(len(returns),)``.
         """
         self._check_fitted()
-        X = self._build_features(returns)
-        return self._model.predict(X)  # type: ignore[union-attr]
+        features = self._build_features(returns)
+        return self._model.predict(features)  # type: ignore[union-attr]
 
     def predict_proba(self, returns: pd.Series) -> np.ndarray:
         """Posterior regime probabilities.
@@ -89,8 +89,8 @@ class RegimeClassifier:
         np.ndarray of shape ``(len(returns), n_regimes)``.
         """
         self._check_fitted()
-        X = self._build_features(returns)
-        _, posteriors = self._model.score_samples(X)  # type: ignore[union-attr]
+        features = self._build_features(returns)
+        _, posteriors = self._model.score_samples(features)  # type: ignore[union-attr]
         return posteriors
 
     def _check_fitted(self) -> None:

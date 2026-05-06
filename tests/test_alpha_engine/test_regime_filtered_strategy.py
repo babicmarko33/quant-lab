@@ -14,14 +14,13 @@ def ohlcv_df() -> pd.DataFrame:
     rng = np.random.default_rng(42)
     close = pd.Series(100.0 + np.cumsum(rng.standard_normal(N) * 0.01))
     idx = pd.bdate_range("2020-01-01", periods=N)
-    df = pd.DataFrame({
+    return pd.DataFrame({
         "open": close.values * 0.999,
         "high": close.values * 1.005,
         "low": close.values * 0.995,
         "close": close.values,
         "volume": 1_000_000.0,
     }, index=idx)
-    return df
 
 
 class TestRegimeFilteredStrategy:
