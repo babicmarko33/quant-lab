@@ -5,7 +5,7 @@
 [![CI](https://github.com/babicmarko33/quant-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/babicmarko33/quant-lab/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
-[![241 tests](https://img.shields.io/badge/tests-241%20passing-brightgreen)](https://github.com/babicmarko33/quant-lab/actions)
+[![433 tests](https://img.shields.io/badge/tests-433%20passing-brightgreen)](https://github.com/babicmarko33/quant-lab/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
@@ -20,21 +20,30 @@ quant-lab/
 │   │   ├── indicators/         # Vectorized: SMA, EMA, RSI, MACD, BB, ATR
 │   │   └── features/           # Feature pipeline with look-ahead bias protection
 │   ├── alpha_engine/           # Strategy development & backtesting
-│   │   ├── strategies/         # Momentum (12-1), Bollinger mean-reversion; Strategy registry
+│   │   ├── strategies/         # Momentum (12-1), Bollinger MR, SMA/EMA cross, RSI
 │   │   ├── backtest/           # Vectorized engine + walk-forward + multi-asset backtester
 │   │   ├── analytics/          # Sharpe, Sortino, PSR, IC, turnover
 │   │   ├── risk/               # Kelly criterion, fractional Kelly, volatility targeting
-│   │   ├── portfolio/          # EqualWeight, MeanVariance, RiskParity, CVaR allocators
+│   │   ├── portfolio/          # EqualWeight, MeanVariance, RiskParity, CVaR,
+│   │   │                       # CardinalityMIQP, MC VaR/CVaR (Cholesky),
+│   │   │                       # MertonHJB (stochastic control), BlackLitterman
+│   │   ├── derivatives/
+│   │   │   ├── options/        # BSM+Greeks, IV solver, multi-leg strategies,
+│   │   │   │                   # Binomial CRR, MC (Eu/Asian/Barrier), PDE+PSOR,
+│   │   │   │                   # Merton PIDE, Variance Gamma
+│   │   │   └── volatility/     # SABR calibration, VolatilitySurface (cubic spline)
 │   │   └── execution/          # Order, Broker ABC, AlpacaBroker, PaperTrader
 │   ├── alpha_ml/               # ML signal generation
 │   │   ├── features/           # FeatureStore: winsorize + z-score + target labels
-│   │   ├── models/             # ModelTrainer ABC + XGBoost binary classifier
+│   │   ├── models/             # ModelTrainer ABC, XGBoost, Ridge/Lasso,
+│   │   │                       # LSTM (PyTorch), ModelEnsemble (soft-voting)
 │   │   ├── validation/         # PurgedKFold (Lopez de Prado), cross_val_predict_purged
 │   │   └── pipeline.py         # End-to-end OHLCV -> signals -> BacktestResult
 │   └── quant_dashboard/        # Streamlit multi-page analytics dashboard
-│       ├── components/charts.py# Pure Plotly chart factories (testable without Streamlit)
-│       └── pages/              # 1_Equity_Curve, 2_Portfolio, 3_ML_Signal
-├── tests/                      # 190+ tests; strict TDD red-green-refactor
+│       ├── components/charts.py# 12 pure Plotly chart factories (testable without Streamlit)
+│       └── pages/              # 1_Equity_Curve, 2_Portfolio, 3_ML_Signal,
+│                               # 4_Options_Pricing, 5_Market_Data
+├── tests/                      # 433 tests; strict TDD red-green-refactor
 ├── scripts/                    # run_backtest.py, run_paper_trader.py
 ├── notebooks/                  # Research notebooks
 ├── docs/
@@ -54,9 +63,11 @@ quant-lab/
 | **Backtesting** | Signal T -> fill T+1 OPEN, slippage/commission modeled, zero look-ahead |
 | **Walk-Forward** | Anchored folds with embargo (Lopez de Prado ch7), mean OOS Sharpe |
 | **ML Pipeline** | XGBoost + purged k-fold CV + PSR / IC evaluation |
-| **Portfolio** | MV, Risk Parity (Spinu 2013), CVaR LP (Rockafellar-Uryasev 2000) |
+| **ML Models** | XGBoost, Ridge/Lasso classifiers, LSTM (PyTorch), ModelEnsemble soft-voting |
+| **Portfolio** | MV, Risk Parity (Spinu 2013), CVaR LP (Rockafellar-Uryasev), Cardinality MIQP, MC VaR/CVaR, Merton HJB, Black-Litterman |
+| **Derivatives** | BSM+full Greeks, IV solver (NR+Brent), Binomial CRR, MC options, PDE Crank-Nicolson+PSOR, Merton PIDE, Variance Gamma, SABR calibration, vol surface |
 | **Execution** | Alpaca paper trading; signal dedup; mock-testable broker interface |
-| **Dashboard** | 3-page Streamlit app: equity curve, portfolio weights, ML feature importance |
+| **Dashboard** | 5-page Streamlit app: equity curve, portfolio, ML signals, options pricing, market data + vol surface |
 
 ---
 
@@ -72,7 +83,7 @@ pip install -e ".[ci]"
 # Copy and populate environment variables
 cp .env.example .env
 
-# Run all tests (190 passing)
+# Run all tests (433 passing)
 pytest -m "not integration" -q
 
 # Launch the dashboard
@@ -165,13 +176,14 @@ pre-commit run --all-files
 
 ## Roadmap
 
-- [x] **Phase 0** — Infrastructure: pyproject, CI/CD, data fetcher, indicators, features
-- [x] **Phase 1** — AlphaEngine: vectorized backtester, momentum + Bollinger, walk-forward, risk (87 tests)
+- [x] **Phase 0** — Infrastructure: pyproject, CI/CD, data fetcher, indicators, features, 8 SOPs
+- [x] **Phase 1** — AlphaEngine: vectorized backtester, momentum + Bollinger + SMA/EMA/RSI, walk-forward, risk (87 tests)
 - [x] **Phase 2** — AlphaML: XGBoost + purged k-fold CV + MLSignalPipeline (129 tests)
-- [x] **Phase 3** — Portfolio: MeanVariance, RiskParity, CVaR, multi-asset backtester (162 tests)
-- [x] **Phase 4** — Dashboard + Paper Trading: Streamlit app, AlpacaBroker, PaperTrader (190 tests)
-- [x] **Phase 5** — Derivatives Lab: Black-Scholes, Greeks, implied volatility, vol surface (241 tests)
-- [ ] **Phase 6** — Production: live execution, monitoring, alerting
+- [x] **Phase 3** — Portfolio: MeanVariance, RiskParity, CVaR, Cardinality MIQP, MC VaR/CVaR, Merton HJB, Black-Litterman, multi-asset backtester (200 tests)
+- [x] **Phase 4** — Dashboard + Paper Trading: Streamlit 5-page app, AlpacaBroker, PaperTrader (190 tests)
+- [x] **Phase 5** — Derivatives Lab: BSM+Greeks, IV, Binomial CRR, MC, PDE/PSOR, Merton PIDE, VG, SABR, vol surface (309 tests)
+- [x] **Phase 5.ML** — ML Models: Ridge/Lasso, LSTM (PyTorch), ModelEnsemble (433 tests total)
+- [ ] **Phase 7** — Advanced Research: GARCH, Kalman/Pairs, HMM Regime, Tradier live options, live event loop, Fama-French, FinRL
 
 ---
 

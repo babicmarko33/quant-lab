@@ -7,6 +7,46 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-05-06
+
+### Added — Phase 6: Dashboard Completion
+- `4_Options_Pricing.py` — 3 tabs: model comparison (BSM/Binomial/MC/PDE), Greeks sensitivity, SABR smile + calibration
+- `5_Market_Data.py` — 3 tabs: OHLCV candlestick + volume, returns analysis, SABR vol surface heatmap
+- `charts.py` extended with 7 new chart helpers: `payoff_fig`, `greeks_sensitivity_fig`, `model_comparison_bar_fig`, `ohlcv_fig`, `rolling_vol_fig`, `vol_surface_heatmap_fig`, `sabr_smile_fig`
+- **Total: 433 tests passing** (all phases complete)
+
+---
+
+## [0.9.0] — 2026-05-06
+
+### Added — Phase 5.1–5.3: ML Model Additions (33 tests)
+- `src/alpha_ml/models/linear.py` — `RidgeClassifier`, `LassoClassifier` via LogisticRegression (13 tests)
+- `src/alpha_ml/models/lstm.py` — `LSTMClassifier` PyTorch sliding-window sequence-to-one binary classifier (9 tests)
+- `src/alpha_ml/models/ensemble.py` — `ModelEnsemble` soft-voting over arbitrary `ModelTrainer` instances (11 tests)
+
+---
+
+## [0.8.0] — 2026-05-06
+
+### Added — Phase 4.4–4.7: Advanced Portfolio Allocators (38 tests)
+- `src/alpha_engine/portfolio/cardinality.py` — `CardinalityAllocator` MIQP via CVXPY/SCIP (8 tests)
+- `src/alpha_engine/portfolio/mc_risk.py` — `mc_var`, `mc_cvar` with Cholesky decomposition for correlated assets (10 tests)
+- `src/alpha_engine/portfolio/merton_hjb.py` — `merton_optimal_weight`, `merton_value_function` via Hamilton-Jacobi-Bellman (13 tests)
+- `src/alpha_engine/portfolio/black_litterman.py` — `BlackLittermanAllocator` posterior returns from investor views (7 tests)
+
+---
+
+## [0.7.0] — 2026-05-06
+
+### Added — Phase 3.3–3.8: Advanced Derivatives Pricing (68 tests)
+- `src/alpha_engine/derivatives/options/monte_carlo.py` — `mc_european`, `mc_asian`, `mc_barrier` with antithetic + control variates (16 tests)
+- `src/alpha_engine/derivatives/options/binomial.py` — `binomial_price` CRR model, European + American early exercise (10 tests)
+- `src/alpha_engine/derivatives/options/pde.py` — `pde_european` Crank-Nicolson; `pde_american` PSOR for linear complementarity (15 tests)
+- `src/alpha_engine/derivatives/options/levy.py` — `merton_price` jump-diffusion PIDE series; `vg_price` Variance Gamma MC (14 tests)
+- `src/alpha_engine/derivatives/volatility/sabr.py` — `sabr_vol` (Hagan et al. 2002); `sabr_calibrate` RMSE minimization (13 tests)
+
+---
+
 ## [0.5.0] — 2026-05-06
 
 ### Added — Phase 5: Derivatives Lab (51 tests)
