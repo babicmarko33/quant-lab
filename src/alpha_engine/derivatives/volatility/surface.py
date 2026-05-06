@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 from scipy.interpolate import RectBivariateSpline
 
 REQUIRED_COLS = {"expiry", "strike", "iv"}
+_TRADING_DAYS = 252
 
 
 class VolatilitySurface:
@@ -75,3 +78,66 @@ class VolatilitySurface:
             )
         grid = self._spline(np.array(expiries), np.array(strikes))
         return pd.DataFrame(grid, index=expiries, columns=strikes)
+
+    @classmethod
+    def from_garch_forecasts(
+        cls,
+        returns: pd.Series,
+        expiries: list[float],
+        strikes: list[float],
+        spot: float,
+        p: int = 1,
+        q: int = 1,
+    ) -> VolatilitySurface:
+        """Build a flat-smile volatility surface from GARCH term-structure.
+
+        Fits a GARCH(p,q) model to ``returns``, forecasts daily vol for each
+        expiry horizon, and constructs a surface where IV is constant across
+        strikes for a given expiry (flat smile) but varies by term.
+
+        Parameters
+        ----------
+        returns:
+            Daily decimal returns (0.01 = 1%).
+        expiries:
+            List of option expiries in years (e.g. [0.083, 0.25, 0.5, 1.0]).
+            Must have at least 2 elements.
+        strikes:
+            List of strike prices. Must have at least 2 elements.
+        spot:
+            Current underlying price (unused in flat-smile construction but
+            reserved for future moneyness-adjusted term structure).
+        p:
+            GARCH lag order for squared residuals.
+        q:
+            GARCH lag order for variance.
+
+        Returns
+        -------
+        VolatilitySurface fitted on the resulting (expiry, strike, iv) grid.
+        """
+        from alpha_engine.derivatives.volatility.garch import fit_garch, forecast_volatility  # noqa: PLC0415
+
+        if len(expiries) < 2:
+            raise ValueError("expiries must have at least 2 elements")
+        if len(strikes) < 2:
+            raise ValueError("strikes must have at least 2 elements")
+
+        result = fit_garch(returns, p=p, q=q)
+
+        # Determine max horizon in trading days
+        max_horizon = max(int(math.ceil(T * _TRADING_DAYS)) for T in expiries)
+        daily_vols = forecast_volatility(result, horizon=max_horizon)
+
+        # For each expiry T, the IV is the mean daily vol over [0, T*252] annualised
+        rows: list[dict] = []
+        for T in expiries:
+            horizon_days = max(1, int(round(T * _TRADING_DAYS)))
+            mean_daily_vol = float(daily_vols[: min(horizon_days, len(daily_vols))].mean())
+            annual_iv = mean_daily_vol * math.sqrt(_TRADING_DAYS)
+            for K in strikes:
+                rows.append({"expiry": T, "strike": float(K), "iv": annual_iv})
+
+        surface = cls()
+        surface.fit(pd.DataFrame(rows))
+        return surface

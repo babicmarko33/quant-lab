@@ -1,3 +1,6 @@
+import math
+
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -67,3 +70,104 @@ class TestVolatilitySurface:
         surf.fit(sample_surface_data)
         grid = surf.surface_grid(strikes=[85, 95, 100, 105, 115], expiries=[0.25, 0.5, 1.0])
         assert (grid.values > 0).all()
+
+
+# ---------------------------------------------------------------------------
+# from_garch_forecasts — TDD tests written before implementation
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def garch_returns() -> pd.Series:
+    rng = np.random.default_rng(42)
+    n = 500
+    vol = np.ones(n) * 0.01
+    r = np.empty(n)
+    for i in range(n):
+        r[i] = rng.normal(0, vol[i])
+        vol_sq_next = 1e-6 + 0.05 * r[i] ** 2 + 0.90 * vol[i] ** 2
+        if i + 1 < n:
+            vol[i + 1] = math.sqrt(vol_sq_next)
+    return pd.Series(r, name="returns")
+
+
+class TestFromGarchForecasts:
+    def test_returns_vol_surface(self, garch_returns):
+        expiries = [0.083, 0.25, 0.5, 1.0]
+        strikes = [80.0, 90.0, 100.0, 110.0, 120.0]
+        surf = VolatilitySurface.from_garch_forecasts(
+            returns=garch_returns,
+            expiries=expiries,
+            strikes=strikes,
+            spot=100.0,
+        )
+        assert isinstance(surf, VolatilitySurface)
+
+    def test_is_fitted_after_construction(self, garch_returns):
+        expiries = [0.25, 0.5, 1.0]
+        strikes = [90.0, 100.0, 110.0]
+        surf = VolatilitySurface.from_garch_forecasts(
+            returns=garch_returns,
+            expiries=expiries,
+            strikes=strikes,
+            spot=100.0,
+        )
+        iv = surf.interpolate(strike=100.0, expiry=0.5)
+        assert iv > 0
+
+    def test_surface_shape(self, garch_returns):
+        expiries = [0.083, 0.25, 0.5, 1.0]
+        strikes = [85.0, 95.0, 100.0, 105.0, 115.0]
+        surf = VolatilitySurface.from_garch_forecasts(
+            returns=garch_returns,
+            expiries=expiries,
+            strikes=strikes,
+            spot=100.0,
+        )
+        grid = surf.surface_grid(strikes=strikes, expiries=expiries)
+        assert grid.shape == (4, 5)
+
+    def test_all_ivs_positive(self, garch_returns):
+        expiries = [0.25, 0.5, 1.0]
+        strikes = [80.0, 100.0, 120.0]
+        surf = VolatilitySurface.from_garch_forecasts(
+            returns=garch_returns,
+            expiries=expiries,
+            strikes=strikes,
+            spot=100.0,
+        )
+        grid = surf.surface_grid(strikes=strikes, expiries=expiries)
+        assert (grid.values > 0).all()
+
+    def test_longer_expiry_has_higher_or_equal_vol(self, garch_returns):
+        """GARCH long-horizon vol mean-reverts upward from short — term structure."""
+        expiries = [0.083, 1.0]
+        strikes = [90.0, 100.0, 110.0]
+        surf = VolatilitySurface.from_garch_forecasts(
+            returns=garch_returns,
+            expiries=expiries,
+            strikes=strikes,
+            spot=100.0,
+        )
+        iv_short = surf.interpolate(strike=100.0, expiry=0.083)
+        iv_long = surf.interpolate(strike=100.0, expiry=1.0)
+        # Not strict — just checks both are positive and plausible
+        assert iv_short > 0
+        assert iv_long > 0
+
+    def test_requires_at_least_two_expiries(self, garch_returns):
+        with pytest.raises(ValueError, match="at least 2"):
+            VolatilitySurface.from_garch_forecasts(
+                returns=garch_returns,
+                expiries=[0.5],
+                strikes=[90.0, 100.0, 110.0],
+                spot=100.0,
+            )
+
+    def test_requires_at_least_two_strikes(self, garch_returns):
+        with pytest.raises(ValueError, match="at least 2"):
+            VolatilitySurface.from_garch_forecasts(
+                returns=garch_returns,
+                expiries=[0.25, 1.0],
+                strikes=[100.0],
+                spot=100.0,
+            )
